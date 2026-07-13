@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GROOVE FLOWER</title>
+<style>
+  :root{
+    --bg:#000000;
+    --pot:#e0312e;
+    --pot-dark:#a01f1d;
+    --petal:#ffc93c;
+    --petal-dark:#e8a91a;
+    --leaf:#3fae4c;
+    --leaf-dark:#2c8a38;
+    --face:#fff6e0;
+    --led:#ff2d78;
+    --led-dim:#3a0f1f;
+    --txt:#d8d8d8;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg);
+    color:var(--txt);
+    font-family:"Courier New", ui-monospace, monospace;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+  }
+  /* spotlight floor */
+  .stage{
+    position:relative;
+    width:min(90vw, 480px);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  .spot{
+    position:absolute;
+    bottom:-10px;
+    left:50%;
+    transform:translateX(-50%);
+    width:340px;height:90px;
+    background:radial-gradient(ellipse at center, rgba(255,201,60,0.16) 0%, rgba(255,201,60,0.05) 45%, transparent 70%);
+    border-radius:50%;
+    pointer-events:none;
+  }
+  svg{width:100%;height:auto;display:block;}
+  .stem-g, .head-g, .leafL-g, .leafR-g, .body-g{
+    transition:none;
+    will-change:transform;
+  }
+  h1{
+    font-size:14px;
+    letter-spacing:0.55em;
+    font-weight:400;
+    color:#666;
+    margin-bottom:6px;
+    text-transform:uppercase;
+    user-select:none;
+  }
+  h1 b{color:var(--petal);font-weight:400;}
+  /* LED level meter */
+  .meter{
+    display:flex;
+    gap:5px;
+    margin:18px 0 14px;
+    height:12px;
+  }
+  .meter i{
+    width:16px;height:12px;
+    background:var(--led-dim);
+    border-radius:2px;
+  }
+  .meter i.on{
+    background:var(--led);
+    box-shadow:0 0 8px var(--led);
+  }
+  .meter i:nth-child(n+8).on{
+    background:#ffc93c;box-shadow:0 0 8px #ffc93c;
+  }
+  /* controls */
+  .ctrl{display:flex;gap:10px;align-items:center;}
+  button{
+    font-family:inherit;
+    font-size:12px;
+    letter-spacing:0.2em;
+    padding:9px 18px;
+    background:transparent;
+    color:#888;
+    border:1px solid #333;
+    border-radius:3px;
+    cursor:pointer;
+  }
+  button:hover{color:#ddd;border-color:#666;}
+  button:focus-visible{outline:2px solid var(--petal);outline-offset:2px;}
+  button.active{
+    color:#000;
+    background:var(--petal);
+    border-color:var(--petal);
+  }
+  .note{
+    margin-top:12px;
+    font-size:11px;
+    color:#555;
+    letter-spacing:0.08em;
+    min-height:15px;
+    text-align:center;
+  }
+  /* start overlay */
+  .overlay{
+    position:fixed;inset:0;
+    background:rgba(0,0,0,0.92);
+    display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    gap:20px;z-index:10;
+    cursor:pointer;
+  }
+  .overlay .big{
+    font-size:16px;letter-spacing:0.6em;color:var(--petal);
+    animation:blink 1.1s steps(2) infinite;
+  }
+  @keyframes blink{50%{opacity:0.25;}}
+  .overlay .sub{font-size:11px;color:#666;letter-spacing:0.2em;}
+  @media (prefers-reduced-motion: reduce){
+    .overlay .big{animation:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="overlay" id="overlay">
+  <div class="big">▶ TAP TO ROCK</div>
+  <div class="sub">GROOVE FLOWER — AUTO MODE</div>
+</div>
+
+<div class="stage">
+  <h1>GROOVE <b>FLOWER</b></h1>
+
+  <svg viewBox="0 0 400 420" aria-label="音に合わせて踊る花のトイ">
+    <!-- 全体(鉢の上で揺れる) -->
+    <g class="body-g" id="bodyG" transform-origin="200 330">
+      <!-- 茎 -->
+      <g class="stem-g" id="stemG" transform-origin="200 330">
+        <path d="M200 330 C 198 290, 202 250, 200 205" stroke="#3fae4c" stroke-width="11" fill="none" stroke-linecap="round"/>
+        <!-- 左葉(腕) -->
+        <g class="leafL-g" id="leafL" transform-origin="197 285">
+          <path d="M197 285 C 160 275, 130 285, 112 305 C 140 312, 175 305, 197 292 Z" fill="var(--leaf)"/>
+          <path d="M197 287 C 168 284, 140 290, 118 302" stroke="var(--leaf-dark)" stroke-width="3" fill="none" stroke-linecap="round"/>
+        </g>
+        <!-- 右葉(腕) -->
+        <g class="leafR-g" id="leafR" transform-origin="203 265">
+          <path d="M203 265 C 240 255, 270 265, 288 285 C 260 292, 225 285, 203 272 Z" fill="var(--leaf)"/>
+          <path d="M203 267 C 232 264, 260 270, 282 282" stroke="var(--leaf-dark)" stroke-width="3" fill="none" stroke-linecap="round"/>
+        </g>
+
+        <!-- 頭 -->
+        <g class="head-g" id="headG" transform-origin="200 205">
+          <!-- 花びら -->
+          <g id="petals" transform-origin="200 148">
+            <g fill="var(--petal)" stroke="var(--petal-dark)" stroke-width="2">
+              <ellipse cx="200" cy="78"  rx="24" ry="38"/>
+              <ellipse cx="253" cy="98"  rx="24" ry="38" transform="rotate(50 253 98)"/>
+              <ellipse cx="272" cy="150" rx="24" ry="38" transform="rotate(95 272 150)"/>
+              <ellipse cx="248" cy="200" rx="24" ry="38" transform="rotate(135 248 200)"/>
+              <ellipse cx="200" cy="219" rx="24" ry="38" transform="rotate(180 200 219)"/>
+              <ellipse cx="152" cy="200" rx="24" ry="38" transform="rotate(225 152 200)"/>
+              <ellipse cx="128" cy="150" rx="24" ry="38" transform="rotate(265 128 150)"/>
+              <ellipse cx="147" cy="98"  rx="24" ry="38" transform="rotate(310 147 98)"/>
+            </g>
+          </g>
+          <!-- 顔 -->
+          <circle cx="200" cy="148" r="52" fill="var(--face)" stroke="#e8d9b0" stroke-width="2"/>
+          <!-- サングラス -->
+          <g fill="#111">
+            <rect x="158" y="128" width="38" height="24" rx="9"/>
+            <rect x="204" y="128" width="38" height="24" rx="9"/>
+            <rect x="193" y="136" width="14" height="5" rx="2"/>
+            <rect x="150" y="134" width="10" height="5" rx="2"/>
+            <rect x="240" y="134" width="10" height="5" rx="2"/>
+          </g>
+          <!-- グラスの反射 -->
+          <rect x="163" y="132" width="10" height="4" rx="2" fill="#4dd7ff" opacity="0.85"/>
+          <rect x="209" y="132" width="10" height="4" rx="2" fill="#4dd7ff" opacity="0.85"/>
+          <!-- 口 -->
+          <path id="mouth" d="M184 168 Q200 180 216 168" stroke="#c2452f" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+        </g>
+      </g>
+    </g>
+
+    <!-- 鉢 -->
+    <g>
+      <path d="M150 332 L250 332 L236 400 L164 400 Z" fill="var(--pot)"/>
+      <path d="M150 332 L250 332 L236 400 L164 400 Z" fill="url(#potShade)"/>
+      <rect x="142" y="322" width="116" height="18" rx="5" fill="var(--pot)"/>
+      <rect x="142" y="322" width="116" height="7" rx="3.5" fill="#f0605c"/>
+      <!-- スピーカー穴 -->
+      <g fill="var(--pot-dark)">
+        <circle cx="185" cy="360" r="3.4"/><circle cx="200" cy="360" r="3.4"/><circle cx="215" cy="360" r="3.4"/>
+        <circle cx="192" cy="372" r="3.4"/><circle cx="208" cy="372" r="3.4"/>
+      </g>
+    </g>
+    <defs>
+      <linearGradient id="potShade" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="rgba(0,0,0,0.25)"/>
+        <stop offset="0.45" stop-color="rgba(0,0,0,0)"/>
+        <stop offset="1" stop-color="rgba(0,0,0,0.3)"/>
+      </linearGradient>
+    </defs>
+  </svg>
+  <div class="spot"></div>
+
+  <div class="meter" id="meter" aria-hidden="true">
+    <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+  </div>
+
+  <div class="ctrl">
+    <button id="btnAuto" class="active">AUTO</button>
+    <button id="btnMic">MIC</button>
+    <button id="btnStop">STOP</button>
+  </div>
+  <div class="note" id="note">内蔵ビートで自動で踊るよ</div>
+</div>
+
+<script>
+(() => {
+  const bodyG = document.getElementById('bodyG');
+  const stemG = document.getElementById('stemG');
+  const headG = document.getElementById('headG');
+  const leafL = document.getElementById('leafL');
+  const leafR = document.getElementById('leafR');
+  const petals = document.getElementById('petals');
+  const mouth = document.getElementById('mouth');
+  const meterEls = [...document.querySelectorAll('#meter i')];
+  const note = document.getElementById('note');
+  const overlay = document.getElementById('overlay');
+  const btnAuto = document.getElementById('btnAuto');
+  const btnMic = document.getElementById('btnMic');
+  const btnStop = document.getElementById('btnStop');
+
+  let ac = null;            // AudioContext
+  let mode = 'stopped';     // 'auto' | 'mic' | 'stopped'
+  let analyser = null, micStream = null, micData = null;
+  let schedTimer = null;
+
+  // ---- ダンス状態(本物っぽい「ポーズ切替」方式) ----
+  const dance = {
+    lean: 0, leanTarget: 0,        // 体の傾き
+    head: 0, headTarget: 0,        // 首の傾き(逆位相)
+    flap: 0, flapTarget: 0,        // 葉っぱ
+    spin: 0,                       // 花びら回転
+    pulse: 0,                      // ビート瞬間の勢い
+    side: 1,
+    level: 0,
+  };
+
+  function triggerBeat(strength = 1){
+    dance.side *= -1;
+    dance.leanTarget = dance.side * (14 + 8 * strength);
+    dance.headTarget = -dance.side * (10 + 6 * strength);
+    dance.flapTarget = 26 + 14 * strength;
+    dance.pulse = Math.min(1, 0.6 + 0.5 * strength);
+  }
+
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let last = performance.now();
+  function loop(now){
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+
+    // カクッと素早く目標へ→ゆっくり戻る(トイっぽい動き)
+    const snap = reduced ? 4 : 16;
+    dance.lean += (dance.leanTarget - dance.lean) * snap * dt;
+    dance.head += (dance.headTarget - dance.head) * snap * dt;
+    dance.flap += (dance.flapTarget - dance.flap) * (snap * 0.9) * dt;
+
+    // 目標はじわっと中立へ
+    dance.leanTarget *= Math.pow(0.25, dt);
+    dance.headTarget *= Math.pow(0.25, dt);
+    dance.flapTarget *= Math.pow(0.12, dt);
+    dance.pulse *= Math.pow(0.05, dt);
+
+    // 常時ゆらゆら(待機モーション)
+    const idle = reduced ? 0 : Math.sin(now / 640) * 2.2;
+    dance.spin += (12 + dance.pulse * 220) * dt;
+
+    bodyG.setAttribute('transform', `rotate(${(dance.lean * 0.5 + idle).toFixed(2)} 200 330)`);
+    stemG.setAttribute('transform', `rotate(${(dance.lean * 0.6).toFixed(2)} 200 330)`);
+    headG.setAttribute('transform', `rotate(${(dance.head).toFixed(2)} 200 205) scale(${(1 + dance.pulse * 0.06).toFixed(3)})`);
+    leafL.setAttribute('transform', `rotate(${(-dance.flap - idle * 2).toFixed(2)} 197 285)`);
+    leafR.setAttribute('transform', `rotate(${(dance.flap + idle * 2).toFixed(2)} 203 265)`);
+    petals.setAttribute('transform', `rotate(${(Math.sin(dance.spin / 30) * 6).toFixed(2)} 200 148)`);
+    mouth.setAttribute('d', dance.pulse > 0.35
+      ? 'M186 166 Q200 186 214 166'   // 大きく笑う
+      : 'M184 168 Q200 180 216 168');
+
+    // レベルメーター
+    const lit = Math.round(dance.level * meterEls.length);
+    meterEls.forEach((el, i) => el.classList.toggle('on', i < lit));
+    dance.level *= Math.pow(0.2, dt);
+
+    // マイクモード:音量解析
+    if (mode === 'mic' && analyser){
+      analyser.getByteTimeDomainData(micData);
+      let sum = 0;
+      for (let i = 0; i < micData.length; i++){
+        const v = (micData[i] - 128) / 128;
+        sum += v * v;
+      }
+      const rms = Math.sqrt(sum / micData.length);
+      dance.level = Math.max(dance.level, Math.min(1, rms * 6));
+      detectOnset(rms, now);
+    }
+
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  // ---- マイクのオンセット検出 ----
+  let baseline = 0.01, lastBeatAt = 0;
+  function detectOnset(rms, now){
+    baseline = baseline * 0.985 + rms * 0.015;
+    const th = Math.max(0.025, baseline * 1.9);
+    if (rms > th && now - lastBeatAt > 160){
+      lastBeatAt = now;
+      triggerBeat(Math.min(1, (rms - th) * 10 + 0.4));
+    }
+  }
+
+  // ---- オートモード:内蔵ファンクビート ----
+  const BPM = 116, STEP = 60 / BPM / 4; // 16分
+  // kick/snare/hat/bass の16ステップパターン
+  const KICK  = [1,0,0,0, 0,0,1,0, 0,0,1,0, 0,0,0,0];
+  const SNARE = [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,1];
+  const HAT   = [1,0,1,0, 1,0,1,1, 1,0,1,0, 1,0,1,0];
+  const BASS  = [55,0,0,55, 0,0,65.4,0, 55,0,73.4,0, 0,65.4,0,0]; // Hz
+  let step = 0, nextTime = 0;
+
+  function playKick(t){
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.frequency.setValueAtTime(150, t);
+    o.frequency.exponentialRampToValueAtTime(45, t + 0.12);
+    g.gain.setValueAtTime(0.9, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+    o.connect(g).connect(ac.destination);
+    o.start(t); o.stop(t + 0.25);
+  }
+  function playSnare(t){
+    const buf = ac.createBuffer(1, ac.sampleRate * 0.15, ac.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
+    const s = ac.createBufferSource(), g = ac.createGain(), f = ac.createBiquadFilter();
+    f.type = 'highpass'; f.frequency.value = 1400;
+    g.gain.setValueAtTime(0.4, t);
+    s.buffer = buf;
+    s.connect(f).connect(g).connect(ac.destination);
+    s.start(t);
+  }
+  function playHat(t){
+    const buf = ac.createBuffer(1, ac.sampleRate * 0.04, ac.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
+    const s = ac.createBufferSource(), g = ac.createGain(), f = ac.createBiquadFilter();
+    f.type = 'highpass'; f.frequency.value = 7000;
+    g.gain.setValueAtTime(0.14, t);
+    s.buffer = buf;
+    s.connect(f).connect(g).connect(ac.destination);
+    s.start(t);
+  }
+  function playBass(t, hz){
+    const o = ac.createOscillator(), g = ac.createGain(), f = ac.createBiquadFilter();
+    o.type = 'square'; o.frequency.value = hz;
+    f.type = 'lowpass'; f.frequency.value = 500;
+    g.gain.setValueAtTime(0.22, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + STEP * 1.8);
+    o.connect(f).connect(g).connect(ac.destination);
+    o.start(t); o.stop(t + STEP * 2);
+  }
+
+  function scheduler(){
+    while (nextTime < ac.currentTime + 0.12){
+      const i = step % 16;
+      const delay = Math.max(0, (nextTime - ac.currentTime) * 1000);
+      if (KICK[i]){ playKick(nextTime); setTimeout(() => { if(mode==='auto'){ triggerBeat(1); dance.level = 1; } }, delay); }
+      if (SNARE[i]){ playSnare(nextTime); setTimeout(() => { if(mode==='auto'){ triggerBeat(0.7); dance.level = Math.max(dance.level, 0.75); } }, delay); }
+      if (HAT[i]) playHat(nextTime);
+      if (BASS[i]) playBass(nextTime, BASS[i]);
+      nextTime += STEP;
+      step++;
+    }
+    schedTimer = setTimeout(scheduler, 30);
+  }
+
+  // ---- モード切替 ----
+  function ensureCtx(){
+    if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
+    if (ac.state === 'suspended') ac.resume();
+  }
+  function stopAll(){
+    clearTimeout(schedTimer); schedTimer = null;
+    if (micStream){ micStream.getTracks().forEach(t => t.stop()); micStream = null; }
+    analyser = null;
+    mode = 'stopped';
+    btnAuto.classList.remove('active');
+    btnMic.classList.remove('active');
+  }
+  function startAuto(){
+    stopAll(); ensureCtx();
+    mode = 'auto';
+    step = 0; nextTime = ac.currentTime + 0.06;
+    scheduler();
+    btnAuto.classList.add('active');
+    note.textContent = '内蔵ビートで自動で踊るよ';
+  }
+  async function startMic(){
+    stopAll(); ensureCtx();
+    try{
+      micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const src = ac.createMediaStreamSource(micStream);
+      analyser = ac.createAnalyser();
+      analyser.fftSize = 1024;
+      micData = new Uint8Array(analyser.fftSize);
+      src.connect(analyser);
+      mode = 'mic';
+      btnMic.classList.add('active');
+      note.textContent = '手拍子とか音楽、聴かせてみて';
+    }catch(e){
+      note.textContent = 'マイクが使えない環境みたい。AUTOで踊らせてね';
+      startAuto();
+    }
+  }
+
+  btnAuto.addEventListener('click', startAuto);
+  btnMic.addEventListener('click', startMic);
+  btnStop.addEventListener('click', () => { stopAll(); note.textContent = 'ひとやすみ'; });
+
+  overlay.addEventListener('click', () => {
+    overlay.remove();
+    startAuto();
+  });
+})();
+</script>
+</body>
+</html>
