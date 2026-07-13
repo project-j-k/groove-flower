@@ -2,7 +2,7 @@
 
 音に反応して踊る花のブラウザトイです。80年代に流行した「音で踊る花のおもちゃ」への非公式オマージュとして、個人が趣味で制作したものです。
 
-👉 **Demo:** https://<your-github-username>.github.io/groove-flower/
+👉 **Demo:** https://project-j-k.github.io/groove-flower/
 
 ## 遊び方
 
